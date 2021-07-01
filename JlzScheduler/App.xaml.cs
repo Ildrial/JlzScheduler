@@ -1,6 +1,6 @@
 ﻿using System.Windows;
 
-namespace Scheduler
+namespace JlzScheduler
 {
     /// <summary>
     /// Interaction logic for App.xaml

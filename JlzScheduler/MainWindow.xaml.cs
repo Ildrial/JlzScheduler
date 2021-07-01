@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Windows;
 using System.Xml;
 
-namespace Scheduler
+namespace JlzScheduler
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

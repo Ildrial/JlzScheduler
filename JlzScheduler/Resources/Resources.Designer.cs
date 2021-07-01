@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace JlzQualiTool {
+namespace JlzScheduler {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace JlzQualiTool {
         public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("JlzQualiTool.Resources.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("JlzScheduler.Resources.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,65 +61,11 @@ namespace JlzQualiTool {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Platz {0}.
-        /// </summary>
-        public static string Court {
-            get {
-                return ResourceManager.GetString("Court", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Kein gültiges Konfigurations-File für {0} Teams vorhanden..
-        /// </summary>
-        public static string Exception_NoConfigFileFound {
-            get {
-                return ResourceManager.GetString("Exception.NoConfigFileFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Phase 1 abschliessen.
-        /// </summary>
-        public static string FinishPhaseOne {
-            get {
-                return ResourceManager.GetString("FinishPhaseOne", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Verlierer {0}.
-        /// </summary>
-        public static string Loser {
-            get {
-                return ResourceManager.GetString("Loser", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0}. Rang.
-        /// </summary>
-        public static string Rank {
-            get {
-                return ResourceManager.GetString("Rank", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unerwarteter Fehler.
         /// </summary>
         public static string UnexpectedException {
             get {
                 return ResourceManager.GetString("UnexpectedException", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Sieger {0}.
-        /// </summary>
-        public static string Winner {
-            get {
-                return ResourceManager.GetString("Winner", resourceCulture);
             }
         }
     }
