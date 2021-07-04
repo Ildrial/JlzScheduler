@@ -22,7 +22,7 @@ namespace JlzScheduler
 
         public void Run()
         {
-            var schedules = this.CreateSchedule(new Schedule(this.Teams), MatchupPairs.ToList(), float.MaxValue);
+            var schedules = this.CreateSchedule(new Schedule(this.Teams, MatchupPairs.ToList()), float.MaxValue);
 
             Log.Info($"Top {schedules.Count} schedules selected:");
             var rank = 0;
@@ -76,28 +76,25 @@ namespace JlzScheduler
             return matchupPairs;
         }
 
-        private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, float bestScore)
+        private List<Schedule> CreateSchedule(Schedule currentSchedule, float bestScore)
         {
             var fixedMatchupPairs = currentSchedule.MatchupPairs.Count;
             string logPrefix = $"L{fixedMatchupPairs + 1}: {currentSchedule.Matchups}\t\t";
 
             var currentSchedules = new List<Schedule>();
 
-            var maximum = availablePairs.Count;
+            var maximum = currentSchedule.AvailableMatchupPairs.Count;
             for (var i = 0; i < maximum; i++)
             {
-                var mp = availablePairs[i];
-                // TODO maybe move available pairs in Schedule and manage in there...
-                var newAvailable = availablePairs.ToList();
-                newAvailable.RemoveAll(p => p.HasCommonMatchups(mp));
-                var newSchedule = currentSchedule.Choose(mp);
+                var mp = currentSchedule.AvailableMatchupPairs[i];
 
-                var isValid = newSchedule.IsValid(newAvailable);
+                var newSchedule = currentSchedule.Choose(mp);
+                var isValid = newSchedule.IsValid();
 
                 // Wheter selected or rejected, equivalents do not need to be checked anymore
                 if (mp.EquivalentMatchupPairs.Any())
                 {
-                    availablePairs.RemoveAll(pair => mp.EquivalentMatchupPairs.Contains(pair));
+                    currentSchedule.AvailableMatchupPairs.RemoveAll(pair => mp.EquivalentMatchupPairs.Contains(pair));
                     maximum -= mp.EquivalentMatchupPairs.Count;
                 }
 
@@ -125,13 +122,7 @@ namespace JlzScheduler
                 }
                 else
                 {
-                    if (newAvailable.Count < 1)
-                    {
-                        // TODO that simple?
-                        continue;
-                    }
-
-                    var schedules = this.CreateSchedule(newSchedule, newAvailable, bestScore);
+                    var schedules = this.CreateSchedule(newSchedule, bestScore);
                     currentSchedules.AddRange(schedules);
                 }
 

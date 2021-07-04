@@ -10,34 +10,45 @@ namespace JlzScheduler
     {
         private float _score = -1f;
 
-        // TODO do not hard code number
-        public bool IsComplete => MatchupPairs.Count == 9;
+        public List<MatchupPair> AvailableMatchupPairs { get; }
+
+        // TODO make '9' setting variable
+        public bool IsComplete => this.MatchupPairs.Count == 9;
 
         public List<MatchupPair> MatchupPairs { get; } = new List<MatchupPair>();
 
         public string Matchups => string.Join("-", this.MatchupPairs);
 
-        // TODO always ok to cache value? clear required at some point?
         public float Score => _score == -1 ? _score = this.CalculateScore2() : _score;
 
         public List<Team> Teams { get; }
 
-        public Schedule(List<Team> teams)
+        public Schedule(List<Team> teams, List<MatchupPair> availableMatchupPairs)
         {
             this.Teams = teams;
+            this.AvailableMatchupPairs = availableMatchupPairs;
         }
 
         public Schedule Choose(MatchupPair newPair)
         {
-            var newSchedule = new Schedule(this.Teams);
+            // TODO maybe move available pairs in Schedule and manage in there...
+            var newAvailables = this.AvailableMatchupPairs.ToList();
+            newAvailables.RemoveAll(p => p.HasCommonMatchups(newPair));
+
+            var newSchedule = new Schedule(this.Teams, newAvailables);
             newSchedule.MatchupPairs.AddRange(this.MatchupPairs);
             newSchedule.MatchupPairs.Add(newPair);
 
             return newSchedule;
         }
 
-        public bool IsValid(List<MatchupPair> availableMatchups)
+        public bool IsValid()
         {
+            if (!this.AvailableMatchupPairs.Any())
+            {
+                return false;
+            }
+
             if (this.MatchupPairs.Count == 0)
             {
                 return true;
@@ -49,7 +60,7 @@ namespace JlzScheduler
             var longBreakTeams = this.GetTeamsWithThreeBreaks();
             foreach (var lbt in longBreakTeams)
             {
-                if (availableMatchups.Any(m => m.HasTeam(lbt)))
+                if (this.AvailableMatchupPairs.Any(m => m.HasTeam(lbt)))
                 {
                     return false;
                 }
