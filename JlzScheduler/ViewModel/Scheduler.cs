@@ -50,21 +50,15 @@ namespace JlzScheduler
                 newAvailable.RemoveAll(p => p.HasCommonMatchups(mp));
                 var newSchedule = currentSchedule.Choose(mp);
 
-                var validity = newSchedule.IsValid(newAvailable);
+                var isValid = newSchedule.IsValid(newAvailable);
 
-                if (validity == ScheduleValidity.OK)
+                if (isValid)
                 {
                     Log.Debug($"{logPrefix} Selecting {mp}");
                 }
-                else if (validity == ScheduleValidity.Reject)
+                else
                 {
                     Log.Debug($"{logPrefix} Rejecting {mp}");
-                    continue;
-                }
-                else if (validity == ScheduleValidity.Abort)
-                {
-                    // TODO join reject and abort?
-                    Log.Debug($"{logPrefix} Aborting with {mp}");
                     continue;
                 }
 

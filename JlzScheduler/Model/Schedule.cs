@@ -6,13 +6,6 @@ using System.Threading.Tasks;
 
 namespace JlzScheduler
 {
-    public enum ScheduleValidity
-    {
-        OK,
-        Reject,
-        Abort
-    }
-
     public class Schedule
     {
         private float _score = -1f;
@@ -43,11 +36,11 @@ namespace JlzScheduler
             return newSchedule;
         }
 
-        public ScheduleValidity IsValid(List<MatchupPair> availableMatchups)
+        public bool IsValid(List<MatchupPair> availableMatchups)
         {
-            if (MatchupPairs.Count == 0)
+            if (this.MatchupPairs.Count == 0)
             {
-                return ScheduleValidity.OK;
+                return true;
             }
 
             // currently that means not 3 matches in row and no more than 3 matches breaks
@@ -58,7 +51,7 @@ namespace JlzScheduler
             {
                 if (availableMatchups.Any(m => m.HasTeam(lbt)))
                 {
-                    return ScheduleValidity.Abort;
+                    return false;
                 }
             }
 
@@ -67,8 +60,9 @@ namespace JlzScheduler
             {
                 if (this.GetTeamDistance(team) > 5)
                 {
-                    // todo not entirely correct since it might be ok if team has 4 matches... but may still be useful anyway....
-                    return ScheduleValidity.Reject;
+                    // todo not entirely correct since it might be ok if team has 4 matches... but
+                    // may still be useful anyway....
+                    return false;
                 }
             }
 
@@ -77,7 +71,7 @@ namespace JlzScheduler
                 var distance = this.GetTeamDistance(team);
                 if (distance > 7 || distance < 5)
                 {
-                    return ScheduleValidity.Reject;
+                    return false;
                 }
             }
 
@@ -94,7 +88,7 @@ namespace JlzScheduler
 
                         if (matchesInRow > 1)
                         {
-                            return ScheduleValidity.Reject;
+                            return false;
                         }
                     }
                     else
@@ -104,7 +98,7 @@ namespace JlzScheduler
                 }
             }
 
-            return ScheduleValidity.OK;
+            return true;
         }
 
         public string ToCsv()
