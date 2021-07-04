@@ -8,7 +8,10 @@ namespace JlzScheduler
     {
         public static readonly Team None = new Team("");
         public string Id { get; } = string.Empty;
+        public List<Matchup> Matchups { get; } = new List<Matchup>();
         public string Name { get; } = string.Empty;
+
+        public int NumberOfMatches => Matchups.Count;
 
         public Team(string id, string name = "")
         {

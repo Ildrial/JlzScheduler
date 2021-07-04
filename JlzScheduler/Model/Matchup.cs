@@ -22,6 +22,9 @@ namespace JlzScheduler
                 throw new InvalidOperationException($"Equal teams: {home}");
             }
 
+            home.Matchups.Add(this);
+            away.Matchups.Add(this);
+
             this.Home = home;
             this.Away = away;
         }

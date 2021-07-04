@@ -8,8 +8,14 @@ namespace JlzScheduler
 {
     public class MatchupPair
     {
+        /// <summary>
+        /// Tracks equivalent matchup pairs which can also be discarded if this one is discarded
+        /// </summary>
+        public List<MatchupPair> EquilvalentMatchupPairs { get; } = new List<MatchupPair>();
+
         public Matchup Matchup1 { get; }
         public Matchup Matchup2 { get; }
+        public string SortedTeamIds => string.Join("-", this.Teams.OrderBy(t => t.Id));
         public List<Team> Teams => new List<Team> { this.Matchup1.Home, this.Matchup1.Away, this.Matchup2.Home, this.Matchup2.Away };
         public string Id => string.CompareOrdinal(Matchup1.Id, Matchup2.Id) < 0 ? Matchup1.Id + Matchup2.Id : Matchup2.Id + Matchup1.Id;
 
@@ -37,18 +43,6 @@ namespace JlzScheduler
         public override string ToString()
         {
             return this.Id;
-        }
-
-        public class MatchupPairComparer : IComparer<MatchupPair>
-        {
-            public int Compare(MatchupPair? x, MatchupPair? y)
-            {
-                if (x is null || y is null)
-                {
-                    throw new InvalidOperationException("MatchupPair must not be null.");
-                }
-                return string.CompareOrdinal(x.Id, y.Id);
-            }
         }
     }
 }

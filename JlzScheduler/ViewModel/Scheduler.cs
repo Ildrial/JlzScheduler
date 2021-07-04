@@ -15,25 +15,67 @@ namespace JlzScheduler
         public List<Matchup> Matchups { get; }
         public List<Team> Teams { get; }
 
-        public Scheduler(List<Team> teams, List<Matchup> matchups, List<MatchupPair> matchupPairs)
+        public Scheduler(List<Team> teams, List<Matchup> matchups)
         {
             this.Teams = teams;
             this.Matchups = matchups;
-            this.MatchupPairs = matchupPairs;
+            this.MatchupPairs = CreateMatchupPairs();
         }
 
         public void Run()
         {
             var schedules = this.CreateSchedule(new Schedule(this.Teams), MatchupPairs.ToList(), float.MaxValue);
 
-            Log.Info("Top 10 schedules selected:");
+            Log.Info($"Top {schedules.Count} schedules selected:");
             var rank = 0;
             foreach (var schedule in schedules)
             {
                 // TODO write into file 'stead of log
-                Log.Info($"Rank {rank++} with Score {schedule.Score}:\n{schedule.ToCsv()}");
+                Log.Info($"Rank {++rank} with Score {schedule.Score}:\n{schedule.ToCsv()}");
                 Log.Info("-------------------------------------------");
             }
+        }
+
+        private List<MatchupPair> CreateMatchupPairs()
+        {
+            var matchupPairs = new List<MatchupPair>();
+            // Note that algorithm is based on ordered matchups
+            for (var i = 0; i < this.Matchups.Count; i++)
+            {
+                for (var j = i + 1; j < this.Matchups.Count; j++)
+                {
+                    if (!this.Matchups[i].HasCommonTeams(this.Matchups[j]))
+                    {
+                        var newPair = new MatchupPair(this.Matchups[i], this.Matchups[j]);
+                        matchupPairs.Add(newPair);
+                    }
+                }
+            }
+
+            foreach (var pair in matchupPairs)
+            {
+                pair.EquilvalentMatchupPairs.AddRange(matchupPairs.Where(mp => mp != pair && mp.SortedTeamIds.Equals(pair.SortedTeamIds)));
+            }
+
+            //List<MatchupPair>.Select(mp => string.Join("", mp.Teams.OrderBy(t => t.Id))).Distinct().ToList()
+
+            // redundant, but done anyway
+            matchupPairs = matchupPairs.OrderBy(mp => mp.Id).ToList();
+
+            Log.Debug($"Generated {matchupPairs.Count} matchup pairs: {string.Join(", ", matchupPairs)}");
+
+            // Duplicate check
+            var duplicates = matchupPairs.GroupBy(x => x.Id)
+              .Where(g => g.Count() > 1)
+              .Select(y => y.Key)
+              .ToList();
+
+            if (duplicates.Any())
+            {
+                throw new InvalidOperationException($"Duplicate matchup pairs found: '{string.Join(", ", duplicates)}'.");
+            }
+
+            return matchupPairs;
         }
 
         private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, float bestScore)

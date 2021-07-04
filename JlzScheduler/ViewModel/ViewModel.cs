@@ -26,8 +26,6 @@ namespace JlzScheduler
 
         public bool IsSilent => !IsBusy;
 
-        public List<MatchupPair> MatchupPairs { get; } = new List<MatchupPair>();
-
         public List<Matchup> Matchups { get; } = new List<Matchup>();
 
         public List<Team> Teams { get; } = new List<Team>();
@@ -59,40 +57,8 @@ namespace JlzScheduler
         {
             this.Teams.Clear();
             this.Matchups.Clear();
-            this.MatchupPairs.Clear();
 
             Log.Debug("All data cleared...");
-        }
-
-        private void GenerateMatchupPairs()
-        {
-            // Note that algorithm is based on ordered matchups
-            for (var i = 0; i < this.Matchups.Count; i++)
-            {
-                for (var j = i + 1; j < this.Matchups.Count; j++)
-                {
-                    if (!Matchups[i].HasCommonTeams(Matchups[j]))
-                    {
-                        this.MatchupPairs.Add(new MatchupPair(this.Matchups[i], this.Matchups[j]));
-                    }
-                }
-            }
-
-            // redundant, but done anyway
-            this.MatchupPairs.Sort(new MatchupPair.MatchupPairComparer());
-
-            Log.Debug($"Generated {this.MatchupPairs.Count} matchup pairs: {string.Join(", ", this.MatchupPairs)}");
-
-            // Duplicate check
-            var duplicates = this.MatchupPairs.GroupBy(x => x.Id)
-              .Where(g => g.Count() > 1)
-              .Select(y => y.Key)
-              .ToList();
-
-            if (duplicates.Any())
-            {
-                throw new InvalidOperationException($"Duplicate matchup pairs found: '{string.Join(", ", duplicates)}'.");
-            }
         }
 
         private async void GenerateScheduleAsync()
@@ -100,9 +66,8 @@ namespace JlzScheduler
             this.ClearAll();
 
             this.LoadMatchupsAndTeams();
-            this.GenerateMatchupPairs();
 
-            var scheduler = new Scheduler(this.Teams, this.Matchups, this.MatchupPairs);
+            var scheduler = new Scheduler(this.Teams, this.Matchups);
 
             Log.Debug("Start scheduling...");
             Stopwatch stopWatch = new Stopwatch();
