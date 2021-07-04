@@ -36,7 +36,7 @@ namespace JlzScheduler
             }
         }
 
-        private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, float scoreToBeat)
+        private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, float bestScore)
         {
             var fixedMatchupPairs = currentSchedule.MatchupPairs.Count;
             string logPrefix = $"L{fixedMatchupPairs + 1}: {currentSchedule.Matchups}\t\t";
@@ -62,10 +62,9 @@ namespace JlzScheduler
                     continue;
                 }
 
-                // TODO terminate early on too high scores! ok so?
-                if (newSchedule.Score > scoreToBeat)
+                if (newSchedule.Score > bestScore)
                 {
-                    Log.Debug($"{logPrefix} Current score too high after selection ({mp}): {newSchedule.Score} > {scoreToBeat}");
+                    Log.Debug($"{logPrefix} Current score too high after selection ({mp}): {newSchedule.Score} > {bestScore}");
                     continue;
                 }
 
@@ -82,28 +81,27 @@ namespace JlzScheduler
                         continue;
                     }
 
-                    var schedules = this.CreateSchedule(newSchedule, newAvailable, scoreToBeat);
+                    var schedules = this.CreateSchedule(newSchedule, newAvailable, bestScore);
                     currentSchedules.AddRange(schedules);
+                }
+
+                currentSchedules = currentSchedules.OrderBy(cs => cs.Score).Take(50).ToList();
+                if (currentSchedules.Any())
+                {
+                    bestScore = Math.Min(currentSchedules.First().Score, bestScore);
                 }
             }
 
-            // TODO where to calculate top 20? inside or outside loop?
-            var top50 = currentSchedules.OrderBy(cs => cs.Score).Take(50).ToList();
-            if (top50.Any())
+            if (currentSchedules.Any())
             {
-                scoreToBeat = Math.Min(top50.Last().Score, scoreToBeat);
-            }
-
-            if (top50.Any())
-            {
-                Log.Debug($"{logPrefix} Level completed, returning Top{top50.Count} with scores from {top50.First().Score} to {top50.Last().Score}.");
+                Log.Debug($"{logPrefix} Level completed, returning Top{currentSchedules.Count} with scores from {currentSchedules.First().Score} to {currentSchedules.Last().Score}.");
             }
             else
             {
                 Log.Debug($"{logPrefix} Branch failed with no possible schedule: {string.Join(", ", currentSchedule.MatchupPairs)}");
             }
 
-            return top50;
+            return currentSchedules;
         }
     }
 }
