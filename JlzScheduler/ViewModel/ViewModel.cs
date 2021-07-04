@@ -1,11 +1,14 @@
 ﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -13,14 +16,23 @@ using System.Windows.Threading;
 namespace JlzScheduler
 {
     [DataContract]
-    public class ViewModel //: INotifyPropertyChanged
+    public class ViewModel : INotifyPropertyChanged
     {
         private static ILog Log = LogManager.GetLogger(typeof(ViewModel));
-        public ICommand GenerateScheduleCommand => new CommandHandler(this.GenerateSchedule, true);
+
+        public ICommand GenerateScheduleCommand => new CommandHandler(this.GenerateScheduleAsync, true);
+
+        public bool IsBusy { get; set; }
+
+        public bool IsSilent => !IsBusy;
 
         public List<MatchupPair> MatchupPairs { get; } = new List<MatchupPair>();
+
         public List<Matchup> Matchups { get; } = new List<Matchup>();
+
         public List<Team> Teams { get; } = new List<Team>();
+
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         public ViewModel()
         {
@@ -36,6 +48,11 @@ namespace JlzScheduler
             Log.Fatal("Unexpected exception occured.", args.Exception);
             MessageBox.Show(args.Exception.Message, Resources.UnexpectedException, MessageBoxButton.OK, MessageBoxImage.Error);
             args.Handled = true;
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string name = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         private void ClearAll()
@@ -78,10 +95,8 @@ namespace JlzScheduler
             }
         }
 
-        private void GenerateSchedule()
+        private async void GenerateScheduleAsync()
         {
-            // TODO async
-
             this.ClearAll();
 
             this.LoadMatchupsAndTeams();
@@ -93,7 +108,11 @@ namespace JlzScheduler
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            scheduler.Run();
+            this.IsBusy = true;
+            OnPropertyChanged(nameof(IsSilent));
+            await Task.Run(() => scheduler.Run());
+            this.IsBusy = false;
+            OnPropertyChanged(nameof(IsSilent));
 
             stopWatch.Stop();
             var ts = stopWatch.Elapsed;

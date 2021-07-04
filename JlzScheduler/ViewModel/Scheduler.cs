@@ -24,7 +24,7 @@ namespace JlzScheduler
 
         public void Run()
         {
-            var schedules = CreateSchedule(new Schedule(this.Teams), MatchupPairs.ToList(), int.MaxValue);
+            var schedules = this.CreateSchedule(new Schedule(this.Teams), MatchupPairs.ToList(), float.MaxValue);
 
             Log.Info("Top 10 schedules selected:");
             var rank = 0;
@@ -36,7 +36,7 @@ namespace JlzScheduler
             }
         }
 
-        private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, int scoreToBeat)
+        private List<Schedule> CreateSchedule(Schedule currentSchedule, List<MatchupPair> availablePairs, float scoreToBeat)
         {
             var fixedMatchupPairs = currentSchedule.MatchupPairs.Count;
             string logPrefix = $"L{fixedMatchupPairs + 1}: {currentSchedule.Matchups}\t\t";
@@ -63,8 +63,9 @@ namespace JlzScheduler
                 }
                 else if (validity == ScheduleValidity.Abort)
                 {
+                    // TODO join reject and abort?
                     Log.Debug($"{logPrefix} Aborting with {mp}");
-                    break;
+                    continue;
                 }
 
                 // TODO terminate early on too high scores! ok so?
@@ -93,22 +94,22 @@ namespace JlzScheduler
             }
 
             // TODO where to calculate top 20? inside or outside loop?
-            var top10 = currentSchedules.OrderBy(cs => cs.Score).Take(10).ToList();
-            if (top10.Any())
+            var top50 = currentSchedules.OrderBy(cs => cs.Score).Take(50).ToList();
+            if (top50.Any())
             {
-                scoreToBeat = Math.Min(top10.Last().Score, scoreToBeat);
+                scoreToBeat = Math.Min(top50.Last().Score, scoreToBeat);
             }
 
-            if (top10.Any())
+            if (top50.Any())
             {
-                Log.Debug($"{logPrefix} Level completed, returning Top{top10.Count} with scores from {top10.First().Score} to {top10.Last().Score}.");
+                Log.Debug($"{logPrefix} Level completed, returning Top{top50.Count} with scores from {top50.First().Score} to {top50.Last().Score}.");
             }
             else
             {
                 Log.Debug($"{logPrefix} Branch failed with no possible schedule: {string.Join(", ", currentSchedule.MatchupPairs)}");
             }
 
-            return top10;
+            return top50;
         }
     }
 }

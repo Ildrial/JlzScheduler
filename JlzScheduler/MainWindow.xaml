@@ -9,7 +9,7 @@
   <Window.DataContext>
     <local:ViewModel />
   </Window.DataContext>
-  
+
   <Grid>
     <Button x:Name="GenerateSchedule"
                     Content="Spielplan Generieren"
@@ -19,6 +19,7 @@
                     VerticalAlignment="Top"
                     Width="200"
                     Margin="10,10,10,0"
-                    Command="{Binding GenerateScheduleCommand, Mode=OneWay}" />
+                    Command="{Binding GenerateScheduleCommand, Mode=OneWay}"
+                    IsEnabled="{Binding IsSilent}" />
   </Grid>
 </Window>

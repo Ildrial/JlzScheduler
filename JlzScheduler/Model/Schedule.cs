@@ -15,7 +15,7 @@ namespace JlzScheduler
 
     public class Schedule
     {
-        private int _score = -1;
+        private float _score = -1f;
 
         // TODO do not hard code number
         public bool IsComplete => MatchupPairs.Count == 9;
@@ -25,7 +25,7 @@ namespace JlzScheduler
         public string Matchups => string.Join("-", this.MatchupPairs);
 
         // TODO always ok to cache value? clear required at some point?
-        public int Score => _score == -1 ? _score = this.CalculateScore() : _score;
+        public float Score => _score == -1 ? _score = this.CalculateScore2() : _score;
 
         public List<Team> Teams { get; }
 
@@ -62,31 +62,26 @@ namespace JlzScheduler
                 }
             }
 
-            var latestPair = this.MatchupPairs.Last();
-
-            // check for too long breaks -> abort
-            foreach (var team in latestPair.Teams)
+            var teamMatches = GetNumberOfMatchesPerTeam();
+            foreach (var team in teamMatches.Where(x => x.Value == 3).Select(x => x.Key))
             {
-                var breaks = 0;
-                for (var i = this.MatchupPairs.Count - 2; i >= 0; i--)
+                if (this.GetTeamDistance(team) > 5)
                 {
-                    if (this.MatchupPairs[i].HasTeam(team))
-                    {
-                        if (breaks > 3)
-                        {
-                            // TODO verify that this never happens when using previous check
-                            return ScheduleValidity.Abort;
-                        }
-
-                        breaks = 0;
-                    }
-                    else
-                    {
-                        breaks++;
-                    }
+                    // todo not entirely correct since it might be ok if team has 4 matches... but may still be useful anyway....
+                    return ScheduleValidity.Reject;
                 }
             }
 
+            foreach (var team in teamMatches.Where(x => x.Value == 4).Select(x => x.Key))
+            {
+                var distance = this.GetTeamDistance(team);
+                if (distance > 7 || distance < 5)
+                {
+                    return ScheduleValidity.Reject;
+                }
+            }
+
+            var latestPair = this.MatchupPairs.Last();
             // check for too few breaks -> reject
             foreach (var team in latestPair.Teams)
             {
@@ -123,14 +118,14 @@ namespace JlzScheduler
             return string.Join("\n", lines);
         }
 
-        private int CalculateScore()
+        private float CalculateScore()
         {
             if (this.MatchupPairs.Count < 4)
             {
                 return 0;
             }
 
-            var score = 0;
+            var score = 0f;
             foreach (var team in this.Teams)
             {
                 score += this.GetScoreByTeam(team);
@@ -139,7 +134,43 @@ namespace JlzScheduler
             return score;
         }
 
-        private int GetScoreByTeam(Team team)
+        private float CalculateScore2()
+        {
+            // TODO score to beat should be best score and applied earlier in loop
+
+            // TODO track overall best score
+
+            if (this.MatchupPairs.Count < 4)
+            {
+                return 0;
+            }
+
+            var score = 0f;
+            foreach (var team in this.Teams)
+            {
+                score += this.GetScoreByTeam2(team);
+            }
+
+            return score;
+        }
+
+        private Dictionary<Team, int> GetNumberOfMatchesPerTeam()
+        {
+            var numberOfMatches = this.Teams.ToDictionary(t => t, t => 0);
+
+            for (var i = 0; i < this.MatchupPairs.Count; i++)
+            {
+                var mp = this.MatchupPairs[i];
+                foreach (var team in mp.Teams)
+                {
+                    numberOfMatches[team] = numberOfMatches[team] + 1;
+                }
+            }
+
+            return numberOfMatches;
+        }
+
+        private float GetScoreByTeam(Team team)
         {
             var positions = new List<int>();
 
@@ -156,9 +187,65 @@ namespace JlzScheduler
             {
                 var difference = positions.Max() - positions.Min();
                 // TODO maybe weigh by number of games?
-                //float weightedDifference = (float) difference / positions.Count();
+                float weightedDifference = (float) difference / positions.Count();
+                return weightedDifference * weightedDifference;
 
-                return difference * difference;
+                //return difference * difference;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private float GetScoreByTeam2(Team team)
+        {
+            var positions = new List<int>();
+
+            for (var i = 0; i < this.MatchupPairs.Count; i++)
+            {
+                var mp = this.MatchupPairs[i];
+                if (mp.HasTeam(team))
+                {
+                    positions.Add(i);
+                }
+            }
+
+            // TODO consider not played matches. maybe need to move available matchup pairs into
+            // schedule for that
+
+            if (positions.Count > 1)
+            {
+                var difference = positions.Max() - positions.Min();
+                var weightedDifference = (float) difference / (positions.Count - 1);
+                return weightedDifference * weightedDifference * weightedDifference;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        private int GetTeamDistance(Team team)
+        {
+            // TODO merge with score
+            var positions = new List<int>();
+
+            for (var i = 0; i < this.MatchupPairs.Count; i++)
+            {
+                var mp = this.MatchupPairs[i];
+                if (mp.HasTeam(team))
+                {
+                    positions.Add(i);
+                }
+            }
+
+            if (positions.Any())
+            {
+                var difference = positions.Max() - positions.Min();
+                return difference;
+
+                //return difference * difference;
             }
             else
             {
@@ -181,8 +268,11 @@ namespace JlzScheduler
 
             // TODO or 4?
             var threshold = this.MatchupPairs.Count - 3;
-            // TODO or <=
-            return latestMatches.Where(x => x.Value > 0 && x.Value <= threshold).Select(l => l.Key).ToList();
+            // TODO or <
+            return latestMatches
+                .Where(x => x.Value > 0 && x.Value <= threshold)
+                .Select(l => l.Key)
+                .ToList();
         }
     }
 }
