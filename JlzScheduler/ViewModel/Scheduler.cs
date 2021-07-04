@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JlzScheduler
 {
@@ -54,7 +52,7 @@ namespace JlzScheduler
 
             foreach (var pair in matchupPairs)
             {
-                pair.EquilvalentMatchupPairs.AddRange(matchupPairs.Where(mp => mp != pair && mp.SortedTeamIds.Equals(pair.SortedTeamIds)));
+                pair.EquivalentMatchupPairs.AddRange(matchupPairs.Where(mp => mp != pair && mp.SortedTeamIds.Equals(pair.SortedTeamIds)));
             }
 
             //List<MatchupPair>.Select(mp => string.Join("", mp.Teams.OrderBy(t => t.Id))).Distinct().ToList()
@@ -85,14 +83,23 @@ namespace JlzScheduler
 
             var currentSchedules = new List<Schedule>();
 
-            foreach (var mp in availablePairs)
+            var maximum = availablePairs.Count;
+            for (var i = 0; i < maximum; i++)
             {
+                var mp = availablePairs[i];
                 // TODO maybe move available pairs in Schedule and manage in there...
                 var newAvailable = availablePairs.ToList();
                 newAvailable.RemoveAll(p => p.HasCommonMatchups(mp));
                 var newSchedule = currentSchedule.Choose(mp);
 
                 var isValid = newSchedule.IsValid(newAvailable);
+
+                // Wheter selected or rejected, equivalents do not need to be checked anymore
+                if (mp.EquivalentMatchupPairs.Any())
+                {
+                    availablePairs.RemoveAll(pair => mp.EquivalentMatchupPairs.Contains(pair));
+                    maximum -= mp.EquivalentMatchupPairs.Count;
+                }
 
                 if (isValid)
                 {
@@ -101,6 +108,7 @@ namespace JlzScheduler
                 else
                 {
                     Log.Debug($"{logPrefix} Rejecting {mp}");
+
                     continue;
                 }
 

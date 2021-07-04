@@ -11,7 +11,7 @@ namespace JlzScheduler
         /// <summary>
         /// Tracks equivalent matchup pairs which can also be discarded if this one is discarded
         /// </summary>
-        public List<MatchupPair> EquilvalentMatchupPairs { get; } = new List<MatchupPair>();
+        public List<MatchupPair> EquivalentMatchupPairs { get; } = new List<MatchupPair>();
 
         public Matchup Matchup1 { get; }
         public Matchup Matchup2 { get; }
